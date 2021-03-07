@@ -35,6 +35,7 @@ class ProductCreate extends Component {
       file: null,
       productDetails: [],
       Imagesubmitted: true,
+      productLoading: true,
     };
   }
 
@@ -49,6 +50,10 @@ class ProductCreate extends Component {
   componentWillReceiveProps(newProps) {
     if (this.state.productDetails !== newProps.productDetails) {
       this.setState({ productDetails: newProps.productDetails });
+    }
+
+    if (this.state.productLoading !== newProps.productLoading) {
+      this.setState({ productLoading: newProps.productLoading });
     }
   }
 
@@ -108,15 +113,16 @@ class ProductCreate extends Component {
     const width = { width: "72vh" };
     const imgwidth = { width: "65vh", height: "50vh" };
     let valid = { display: "block" };
+    if (this.props.productLoading) {
+      return null;
+    }
     if (!this.state.Imagesubmitted) {
       valid = { display: "none" };
     }
     if (this.state.Imagesubmitted) {
       valid = { display: "block" };
     }
-    if (this.props.productLoading) {
-      return null;
-    }
+
     return (
       <>
         <Breadcrumb title="Edit Product" parent="Product" />
@@ -126,9 +132,18 @@ class ProductCreate extends Component {
             onFinish={this.onFinish}
             validateMessages={validateMessages}
             initialValues={{
-              title: this.props.productDetails.products.title,
-              description: this.props.productDetails.products.description,
-              price: this.props.productDetails.products.price,
+              title:
+                this.props.productDetails.products == undefined
+                  ? null
+                  : this.props.productDetails.products.title,
+              description:
+                this.props.productDetails.products == undefined
+                  ? null
+                  : this.props.productDetails.products.description,
+              price:
+                this.props.productDetails.products == undefined
+                  ? null
+                  : this.props.productDetails.products.price,
             }}
           >
             <Row>
@@ -185,8 +200,10 @@ class ProductCreate extends Component {
                   <img
                     style={imgwidth}
                     src={
-                      this.props.productDetails.base_url +
-                      this.props.productDetails.products.image
+                      this.props.productDetails.products == undefined
+                        ? null
+                        : this.props.productDetails.base_url +
+                          this.props.productDetails.products.image
                     }
                     alt="main"
                   />
@@ -216,6 +233,7 @@ const mapStateToProps = (state) => ({
   productDetails: state.products.product,
   authInfo: state.adminLogin.authInfo,
   isLoggedIn: state.adminLogin.isLoggedIn,
+  productLoading: state.products.productLoading,
 });
 
 export default connect(mapStateToProps, {

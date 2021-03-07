@@ -120,6 +120,7 @@ export default function productReducer(state = initialState, action) {
         ...state,
         error: action.error,
         product: [],
+        productLoading: false,
       };
     default:
   }

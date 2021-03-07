@@ -2,10 +2,7 @@ import React, { Component, Fragment } from "react";
 import Breadcrumb from "../../common/breadcrumb";
 import { Edit, Trash2 } from "react-feather";
 import { connect } from "react-redux";
-import {
-  fetchallProducts,
-  deleteProduct
-} from "../../../actions";
+import { fetchallProducts, deleteProduct } from "../../../actions";
 import Pagination from "@material-ui/lab/Pagination";
 import { Link } from "react-router-dom";
 import { withRouter } from "react-router-dom";
@@ -22,6 +19,7 @@ export class Product_list extends Component {
       productList: [],
       pageNo: 1,
       deleteLoading: false,
+      productsLoading: true,
     };
   }
 
@@ -38,8 +36,10 @@ export class Product_list extends Component {
     if (this.state.productList !== newProps.products.products) {
       this.setState({ productList: newProps.products.products });
     }
+    if (this.state.productsLoading !== newProps.productsLoading) {
+      this.setState({ productsLoading: newProps.productsLoading });
+    }
   }
-
 
   timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -65,7 +65,6 @@ export class Product_list extends Component {
   };
 
   render() {
-    console.log("product prop",this.props.products)
     const noproduct = (
       <div className="row">
         <div className="col-sm-12 text-center section-b-space mt-5 no-found">
@@ -74,12 +73,16 @@ export class Product_list extends Component {
         </div>
       </div>
     );
+    if (this.state.productsLoading) {
+      return null;
+    }
     return (
       <Fragment>
         <Breadcrumb title="Product List" parent="Physical" />
-       
+
         <div className="container-fluid">
-          {this.props.products.products.data === undefined ? null : this.props.products.products.data.length === 0 ? (
+          {this.props.products.products.data === undefined ? null : this.props
+              .products.products.data.length === 0 ? (
             noproduct
           ) : this.state.deleteLoading ? (
             <div className="m-50">
@@ -98,7 +101,9 @@ export class Product_list extends Component {
                               <a className="bg-size">
                                 <img
                                   className="img-fluid blur-up bg-img lazyloaded"
-                                  src={this.props.products.base_url + myData.image}
+                                  src={
+                                    this.props.products.base_url + myData.image
+                                  }
                                   alt="lazy-loading"
                                 />
                               </a>
@@ -140,9 +145,7 @@ export class Product_list extends Component {
                               {" "}
                               <h6>{myData.title}</h6>
                             </a>
-                            <h6>                              
-                              {myData.price}  &nbsp; &nbsp;BDT
-                            </h6>
+                            <h6>{myData.price} &nbsp; &nbsp;BDT</h6>
                           </div>
                         </div>
                       </div>
@@ -153,8 +156,8 @@ export class Product_list extends Component {
             </div>
           )}
           <div className="container d-flex justify-content-center">
-            {this.state.productList.current_page === undefined ? null : this.state
-                .productList.data.length === 0 ? null : (
+            {this.state.productList.current_page === undefined ? null : this
+                .state.productList.data.length === 0 ? null : (
               <Pagination
                 count={this.state.productList.last_page}
                 page={this.state.productList.current_page}
@@ -164,7 +167,7 @@ export class Product_list extends Component {
                     this.props.authInfo,
                     page,
                     this.props.history,
-                    "",
+                    ""
                   );
                 }}
               />
