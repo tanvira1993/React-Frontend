@@ -79,8 +79,7 @@ export class Product_list extends Component {
         <Breadcrumb title="Product List" parent="Physical" />
        
         <div className="container-fluid">
-          {this.state.productList.data === undefined ? null : this.state
-              .productList.data.length === 0 ? (
+          {this.props.products.products.data === undefined ? null : this.props.products.products.data.length === 0 ? (
             noproduct
           ) : this.state.deleteLoading ? (
             <div className="m-50">
@@ -88,7 +87,7 @@ export class Product_list extends Component {
             </div>
           ) : (
             <div className="row products-admin ratio_asos">
-              {this.state.productList.data.map((myData, i) => {
+              {this.props.products.products.data.map((myData, i) => {
                 return (
                   <div className="col-xl-3 col-sm-6" key={i}>
                     <div className="card">

@@ -5,99 +5,15 @@ import * as api from "../constants/ReUsageStaff";
 
 toast.configure();
 
-//user creation
-export const createUserStart = () => ({
-  type: types.USER_CREATE_START,
-});
-
-export const createUserSuccess = (createUser) => ({
-  type: types.USER_CREATE_SUCCESS,
-  createUser,
-});
-
-export const createUserFailure = (error) => ({
-  type: types.USER_CREATE_FAILURE,
-  error,
-});
-
-export const createUser = (data, authInfo, history) => (dispatch) => {
-  try {
-    let headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    headers.append("Accept", "application/json");
-    headers.append("Authorization", "Bearer " + authInfo);
-    headers.append("Origin", "*");
-    dispatch(createUserStart());
-    const requestOptions = {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({
-        name: data.name,
-        email: data.email,
-        username: data.userName,
-        password: data.password,
-        password_confirmation: data.confirmPassword,
-        phone: data.phone,
-        avatar: data.desc,
-      }),
-    };
-    fetch(api.register, requestOptions)
-      .then((res) => res.json())
-      .then(
-        (result) => {
-          if (result.error || result.errors) {
-            dispatch(createUserFailure(result.error));
-            if (
-              result.error ===
-              "Unauthenticated user may not perform this operation."
-            ) {
-              dispatch(logout(authInfo, history));
-            }
-            else if (
-              result.errors.email !== undefined && result.errors.username !== undefined
-            ) {
-              toast.error(result.errors.email[0]);
-              toast.error(result.errors.username[0])
-            }
-            else if (
-              result.errors.email !== undefined 
-            ) {
-              toast.error(result.errors.email[0]);
-            }
-            else if (
-               result.errors.username !== undefined
-            ) {
-              toast.error(result.errors.username[0])
-            }
-            else{
-              //do nothing
-            }
-          } else {
-            dispatch(createUserSuccess(result));            
-            if (result.message === "Member has been created successfully.") {
-              toast.success("Member has been created successfully.");
-              history.push("/users/list-user");
-            }
-          }
-        },
-        (error) => {
-          dispatch(createUserFailure("Conncection Error!"));
-        }
-      );
-  } catch (error) {
-    toast.error("Something is wrong..!! Please, try agian.");
-  }
-};
-
 //admin login
-
 export const adminloginStart = () => ({
   type: types.ADMIN_LOGIN_START,
 });
 
-export const adminloginSuccess = (email,token) => ({
+export const adminloginSuccess = (email, token) => ({
   type: types.ADMIN_LOGIN_SUCCESS,
-  email,token
+  email,
+  token,
 });
 
 export const adminloginFailure = (error) => ({
@@ -127,7 +43,7 @@ export const adminLoginAll = (loginObject, history) => (dispatch) => {
         dispatch(adminloginFailure(response.error));
         history.push("/");
       }
-      if(response.token){
+      if (response.token) {
         dispatch(adminloginSuccess(loginObject.email, response.token));
         history.push("/products/product-list");
         toast.success("Login Successful");
@@ -141,7 +57,6 @@ export const adminLoginAll = (loginObject, history) => (dispatch) => {
 };
 
 //logout
-
 export const logout = (authInfo, history) => (dispatch) => {
   const requestOptions = {
     method: "GET",
@@ -167,7 +82,6 @@ export const logout = (authInfo, history) => (dispatch) => {
     });
 };
 
-
 //Product creation
 export const createProductStart = () => ({
   type: types.PRODUCT_CREATE_START,
@@ -183,44 +97,41 @@ export const createProductFailure = (error) => ({
   error,
 });
 
-export const createProduct = (data, authInfo, history) => (dispatch) => {
+export const createProduct = (data, authInfo, history, image) => (dispatch) => {
   try {
     let headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    headers.append("Accept", "application/json");
     headers.append("Authorization", "Bearer " + authInfo);
-    headers.append("Origin", "*");
-
+    let formdata = new FormData();
+    formdata.append("title", data.title);
+    formdata.append("price", data.price);
+    formdata.append("description", data.description);
+    formdata.append("image", image);
     dispatch(createProductStart());
 
     const requestOptions = {
       method: "POST",
       headers: headers,
-      body: data,
+      body: formdata,
     };
     fetch(api.product_add, requestOptions)
       .then((res) => res.json())
       .then(
         (result) => {
-          if (result.error) {
-            dispatch(createProductFailure(result.error));
-            toast.error(result.message);
-            if (
-              result.error ===
-              "Unauthenticated user may not perform this operation."
-            ) {
-              dispatch(logout(authInfo, history));
-            }
-          } else {
+          if (result.success) {
             dispatch(createProductSuccess(result));
-            if(result.message === "Product is created successfully."){
             toast.success("Product is created successfully.");
             history.push("/products/product-list");
+          } else {
+            dispatch(createProductFailure(result.message));
+            if (
+              result.status == "Token is Invalid" ||
+              result.status == "Token is Expired" ||
+              result.status == "Authorization Token not found"
+            ) {
+              dispatch(logout(authInfo, history));
+            } else {
+              toast.error(result.message);
             }
-            else{
-              toast.error("Please, provide valid information about sub-category.");
-            }
-            
           }
         },
         (error) => {
@@ -261,31 +172,33 @@ export const fetchallProducts = (authInfo, page, history, key, paginateUrl) => (
     };
     dispatch(fetchProductsStart());
     let url;
-    if(key === ""){
-      url = api.product_list + "?page=" + page
+    if (key === "") {
+      url = api.product_list + "?page=" + page;
     }
     if (key === "pagination") {
-      url = paginateUrl
+      url = paginateUrl;
     }
-      fetch(url, requestOptions)
-        .then((res) => res.json())
-        .then(
-          (result) => {
-            if(result.success){
-              dispatch(fetchProductsSuccess(result)); 
+    fetch(url, requestOptions)
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          if (result.success) {
+            dispatch(fetchProductsSuccess(result));
+          } else {
+            dispatch(fetchProductsFailure(result.message));
+            if (
+              result.status == "Token is Invalid" ||
+              result.status == "Token is Expired" ||
+              result.status == "Authorization Token not found"
+            ) {
+              dispatch(logout(authInfo, history));
             }
-            else {
-              dispatch(fetchProductsFailure(result.error));
-              if (result.status == "Token is Invalid"||result.status == "Token is Expired"||result.status == "Authorization Token not found") {
-                dispatch(logout(authInfo, history));
-              }
-            }
-          },
-          (error) => {
-            dispatch(fetchProductsFailure("Conncection Error!"));
           }
-        );
-   
+        },
+        (error) => {
+          dispatch(fetchProductsFailure("Conncection Error!"));
+        }
+      );
   } catch (error) {
     toast.error("Something is wrong..!! Please, try agian.");
   }
@@ -317,17 +230,23 @@ export const fetchSingleProduct = (id, authInfo, history) => (dispatch) => {
       },
     };
     dispatch(fetchSingleProductStart());
-    fetch(api.product_details+ id, requestOptions)
+    fetch(api.product_details + id, requestOptions)
       .then((res) => res.json())
       .then(
         (result) => {
-          if (result.error) {
-            dispatch(fetchSingleProductFailure(result.error));
-            if (result.error === "Route not found.") {
-              dispatch(logout(authInfo, history));
-            }
-          } else {
+          if (result.success) {
             dispatch(fetchSingleProductSuccess(result));
+          } else {
+            dispatch(fetchSingleProductFailure(result.message));
+            if (
+              result.status == "Token is Invalid" ||
+              result.status == "Token is Expired" ||
+              result.status == "Authorization Token not found"
+            ) {
+              dispatch(logout(authInfo, history));
+            } else {
+              toast.error(result.message);
+            }
           }
         },
         (error) => {
@@ -366,18 +285,24 @@ export const deleteProduct = (uuid, authInfo, history) => (dispatch) => {
     };
 
     dispatch(deleteProductStart());
-    fetch(api.product_delete  + uuid, requestOptions)
+    fetch(api.product_delete + uuid, requestOptions)
       .then((res) => res.json())
       .then(
         (result) => {
-          if (result.error) {
-            dispatch(deleteProductFailure(result.error));
-            if (result.error === "Route not found.") {
-              dispatch(logout(authInfo, history));
-            }
-          } else {
+          if (result.success) {
             dispatch(deleteProductSuccess(result));
             toast.error(result.message);
+          } else {
+            dispatch(deleteProductFailure(result.message));
+            if (
+              result.status == "Token is Invalid" ||
+              result.status == "Token is Expired" ||
+              result.status == "Authorization Token not found"
+            ) {
+              dispatch(logout(authInfo, history));
+            } else {
+              toast.error(result.message);
+            }
           }
         },
         (error) => {
@@ -404,41 +329,43 @@ export const updateProductFailure = (error) => ({
   error,
 });
 
-export const updateProduct = (uuid, dataObj, authInfo, history) => (
+export const updateProduct = (uuid, dataObj, authInfo, history, image) => (
   dispatch
 ) => {
   try {
     let headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    headers.append("Accept", "application/json");
     headers.append("Authorization", "Bearer " + authInfo);
-    headers.append("Origin", "*");
+    let formdata = new FormData();
+    formdata.append("title", dataObj.title);
+    formdata.append("price", dataObj.price);
+    formdata.append("description", dataObj.description);
+    if (image != "") {
+      formdata.append("image", image);
+    }
     const requestOptions = {
-      method: "PATCH",
+      method: "POST",
       headers: headers,
-      body: dataObj,
+      body: formdata,
     };
     dispatch(updateProductStart());
-    fetch(api.product_edit + "/" + uuid, requestOptions)
+    fetch(api.product_edit + uuid, requestOptions)
       .then((res) => res.json())
       .then(
         (result) => {
-          if (result.error) {
-            dispatch(updateProductFailure(result.error));
+          if (result.success) {
+            dispatch(updateProductSuccess(result));
+            toast.success("Product is updated successfully.");
+            history.push("/products/product-list");
+          } else {
+            dispatch(updateProductFailure(result.message));
             if (
-              result.error ===
-              "Unauthenticated user may not perform this operation."
+              result.status == "Token is Invalid" ||
+              result.status == "Token is Expired" ||
+              result.status == "Authorization Token not found"
             ) {
               dispatch(logout(authInfo, history));
-            }
-          } else {
-            dispatch(updateProductSuccess(result));
-            if(result.message === "Product is created successfully."){
-              toast.success("Product is Updated successfully.");
-              history.push("/products/product-list");
-              }
-            else{
-              toast.error("Please, provide valid Information.");
+            } else {
+              toast.error(result.message);
             }
           }
         },
@@ -450,5 +377,3 @@ export const updateProduct = (uuid, dataObj, authInfo, history) => (
     toast.error("Something is wrong..!! Please, try agian.");
   }
 };
-
-
