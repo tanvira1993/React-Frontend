@@ -100,6 +100,7 @@ export class Product_list extends Component {
                             <div className="front">
                               <a className="bg-size">
                                 <img
+                                  style={{height: '200px', width: '300px'}}
                                   className="img-fluid blur-up bg-img lazyloaded"
                                   src={
                                     this.props.products.base_url + myData.image
