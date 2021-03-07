@@ -1,0 +1,7 @@
+.loading-cls {
+    width: 70px;
+    height: 60px;
+    background-repeat: no-repeat;
+    margin: 0 auto;
+    background-image: url("./images/loader/loader.gif");
+  }

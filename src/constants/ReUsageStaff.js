@@ -1,0 +1,9 @@
+export const Base_url = "http://127.0.0.1:8000/api/";
+export const register = Base_url + 'register';
+export const login = Base_url + 'login';
+export const logout = Base_url + 'logout';
+export const product_add = Base_url + 'product';
+export const product_edit = Base_url + 'edit/';
+export const product_details = Base_url + 'product/';
+export const product_delete = Base_url + 'delete/';
+export const product_list = Base_url + 'products';
