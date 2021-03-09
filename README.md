@@ -1,1 +1,1 @@
-# price-comparison-back-end
+# React frontend
